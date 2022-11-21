@@ -1,0 +1,23 @@
+import numpy as np
+import cv2
+
+data = np.loadtxt('C:\\letter-recognition.data',dtype='float32',delimiter=',',
+              converters = {0: lambda ch:ord(ch)-ord('A')})
+
+# vsplit으로 5구간으로 나눈뒤 80%는 train, 20%는 test로 사용
+train1,train2, train3, train4, test = np.vsplit(data,5)
+train = np.concatenate((train1,train2,train3,train4), axis = 0)
+
+# 라벨과 특성을 나누기
+# [1]은 앞에 하나만 자르고 뒤는 다 이어서 split
+train_labels, trainData = np.hsplit(train,[1])
+test_labels, testData = np.hsplit(test,[1])
+
+# KNN 시작
+knn = cv2.ml.KNearest_create()
+knn.train(trainData,cv2.ml.ROW_SAMPLE,train_labels)
+ret, results, neighbours, dist = knn.findNearest(testData,k=5)
+
+correct = np.count_nonzero(results == test_labels)
+accuracy = correct*100/results.size
+print(accuracy)
